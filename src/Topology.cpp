@@ -36,7 +36,7 @@ class Topology
   public:
     Topology(NetworkParameters *netParams);
     int Init();
-    int Broadcast(int* data, int size);
+    int Broadcast(int *data, int size);
     ~Topology();
 };
 
@@ -55,9 +55,8 @@ Topology::Topology(NetworkParameters *netParams)
     this->netParams = netParams;
     int *tempDimmensions = new int[2];
     // Get dimmensions from the user
-    ifRoot(netParams->getCurrentRank(), {
+    ifRoot(this->netParams->getCurrentRank(), {
         readTopologyDimmensions(&(dimmensions.m), &(dimmensions.n));
-        cout << "m: " << dimmensions.m << " n: " << dimmensions.n << endl;
         tempDimmensions[0] = this->dimmensions.m;
         tempDimmensions[1] = this->dimmensions.n;
     });
@@ -65,6 +64,19 @@ Topology::Topology(NetworkParameters *netParams)
     this->Broadcast(tempDimmensions, 2);
     this->dimmensions.m = tempDimmensions[0];
     this->dimmensions.n = tempDimmensions[1];
+    delete[] tempDimmensions;
+
+    ifRoot(this->netParams->getCurrentRank(), {
+        if (!(this->isValid()))
+        {
+            std::cout << "\033[1;31m"
+                      << "Error: Invalid number of processes or topology dimmensions!"
+                      << "\033[0m"
+                      << std::endl;
+
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    })
 }
 
 /**
@@ -80,9 +92,6 @@ bool Topology::isValid()
 
 int Topology::Init()
 {
-    if (this->isValid())
-    {
-    }
 }
 
 Topology::~Topology()
