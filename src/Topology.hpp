@@ -9,9 +9,19 @@
  * 
  */
 
+#include "NetworkParameters.hpp"
+
+struct TopologyDimmensions
+{
+    int m;
+    int n;
+};
+
 class Topology
 {
-public:
-    Topology(NetworkParameters* netParams);
+  public:
+    Topology(NetworkParameters *netParams);
+    int Init();
+    int Broadcast(int* data, int size);
     ~Topology();
 };
