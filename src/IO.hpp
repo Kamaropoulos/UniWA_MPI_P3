@@ -20,6 +20,8 @@
  * 
  */
 
+#pragma once
+
 #define DEFAULT_FILENAME "matrix.in"
 
 #include <vector>

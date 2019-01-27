@@ -9,6 +9,8 @@
  * 
  */
 
+#pragma once
+
 #include "NetworkParameters.hpp"
 
 #include <vector>
@@ -25,7 +27,7 @@ struct Neighbors {
     int up;
     int down;
     int left;
-    int right
+    int right;
 };
 
 class Topology
@@ -36,7 +38,14 @@ class Topology
     void Broadcast(int *data, int size);
     void Load(vector<int> data);
     void Scatter(vector<int> data);
+    void Send(int* data, int dataCount, int target);
+    void Receive(int *data, int dataCount, int source);
     void Barrier();
+    Neighbors GetNeighbors();
+    void GetCoords(int* coords);
     int getLocalData();
+    NetworkParameters *netParams;
+    TopologyDimmensions dimmensions;
+    Neighbors neighbors;
     ~Topology();
 };

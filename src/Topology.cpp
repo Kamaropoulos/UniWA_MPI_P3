@@ -27,19 +27,18 @@ struct TopologyDimmensions
     int n;
 };
 
-struct Neighbors {
+struct Neighbors
+{
     int up;
     int down;
     int left;
-    int right
+    int right;
 };
 
 class Topology
 {
   private:
     int localData;
-    TopologyDimmensions dimmensions;
-    NetworkParameters *netParams;
     MPI_Comm topologyCommunicator;
 
     bool isValid();
@@ -50,10 +49,21 @@ class Topology
     void Broadcast(int *data, int size);
     void Load(vector<int> data);
     void Scatter(vector<int> data);
+    void Send(int *data, int dataCount, int target);
+    void Receive(int *data, int dataCount, int source);
+    void GetCoords(int* coords);
     void Barrier();
+    Neighbors GetNeighbors();
     int getLocalData();
     ~Topology();
+    NetworkParameters *netParams;
+    TopologyDimmensions dimmensions;
+    Neighbors neighbors;
 };
+
+Neighbors Topology::GetNeighbors(){
+    return neighbors;
+}
 
 void Topology::Broadcast(int *data, int size)
 {
@@ -65,8 +75,13 @@ void Topology::Barrier()
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
+void Topology::GetCoords(int* coords){
+    MPI_Cart_coords(this->topologyCommunicator, this->netParams->getCurrentRank(), 2, coords);
+}
+
 int Topology::getLocalData()
 {
+    // cout << "Process " << this->netParams->getCurrentRank() << ": " << "U=" << this->neighbors.up << " D=" << this->neighbors.down << " L=" << this->neighbors.left << " R=" << this->neighbors.right << endl;
     return this->localData;
 }
 
@@ -120,7 +135,20 @@ void Topology::Scatter(vector<int> data)
 
     this->localData = tempData;
 
-    cout << "Process " << this->netParams->getCurrentRank() << " got: " << this->localData << endl;
+    // cout << "Process " << this->netParams->getCurrentRank() << " got: " << this->localData << endl;
+}
+
+void Topology::Send(int *data, int dataCount, int target)
+{
+    // cout << this->netParams->getCurrentRank() << " sends to " << target << endl;
+    MPI_Send(data, dataCount, MPI_INT, target, 10, this->topologyCommunicator);
+}
+
+void Topology::Receive(int *data, int dataCount, int source)
+{
+    MPI_Status status;
+    // cout << this->netParams->getCurrentRank() << " receives from " << source << endl;
+    MPI_Recv(data, dataCount, MPI_INT, source, 10, this->topologyCommunicator, &status);
 }
 
 void Topology::Init()
@@ -141,6 +169,12 @@ void Topology::Init()
     int periods[2] = {0, 0};
 
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &(this->topologyCommunicator));
+
+    // Find Neighbors
+    MPI_Cart_shift(topologyCommunicator, 0, 1, &(this->neighbors.up), &(this->neighbors.down));
+    MPI_Cart_shift(topologyCommunicator, 1, 1, &(this->neighbors.left), &(this->neighbors.right));
+
+    // cout << "Process " << this->netParams->getCurrentRank() << ": " << "U=" << this->neighbors.up << " D=" << this->neighbors.down << " L=" << this->neighbors.left << " R=" << this->neighbors.right << endl;
 }
 
 void Topology::Load(vector<int> data)
@@ -175,10 +209,6 @@ void Topology::Load(vector<int> data)
     this->Barrier();
 
     // Scatter Data
-    //     for (int i = 0; i < data.size(); i++)
-    // {
-    //     cout << data[0] << " ";
-    // }
     this->Scatter(data);
 }
 
