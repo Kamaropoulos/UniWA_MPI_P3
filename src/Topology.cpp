@@ -51,7 +51,7 @@ class Topology
     void Scatter(vector<int> data);
     void Send(int *data, int dataCount, int target);
     void Receive(int *data, int dataCount, int source);
-    void GetCoords(int* coords);
+    void GetCoords(int *coords);
     void Barrier();
     Neighbors GetNeighbors();
     int getLocalData();
@@ -61,7 +61,8 @@ class Topology
     Neighbors neighbors;
 };
 
-Neighbors Topology::GetNeighbors(){
+Neighbors Topology::GetNeighbors()
+{
     return neighbors;
 }
 
@@ -75,13 +76,13 @@ void Topology::Barrier()
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void Topology::GetCoords(int* coords){
+void Topology::GetCoords(int *coords)
+{
     MPI_Cart_coords(this->topologyCommunicator, this->netParams->getCurrentRank(), 2, coords);
 }
 
 int Topology::getLocalData()
 {
-    // cout << "Process " << this->netParams->getCurrentRank() << ": " << "U=" << this->neighbors.up << " D=" << this->neighbors.down << " L=" << this->neighbors.left << " R=" << this->neighbors.right << endl;
     return this->localData;
 }
 
@@ -134,20 +135,16 @@ void Topology::Scatter(vector<int> data)
     this->Barrier();
 
     this->localData = tempData;
-
-    // cout << "Process " << this->netParams->getCurrentRank() << " got: " << this->localData << endl;
 }
 
 void Topology::Send(int *data, int dataCount, int target)
 {
-    // cout << this->netParams->getCurrentRank() << " sends to " << target << endl;
     MPI_Send(data, dataCount, MPI_INT, target, 10, this->topologyCommunicator);
 }
 
 void Topology::Receive(int *data, int dataCount, int source)
 {
     MPI_Status status;
-    // cout << this->netParams->getCurrentRank() << " receives from " << source << endl;
     MPI_Recv(data, dataCount, MPI_INT, source, 10, this->topologyCommunicator, &status);
 }
 
@@ -173,14 +170,12 @@ void Topology::Init()
     // Find Neighbors
     MPI_Cart_shift(topologyCommunicator, 0, 1, &(this->neighbors.up), &(this->neighbors.down));
     MPI_Cart_shift(topologyCommunicator, 1, 1, &(this->neighbors.left), &(this->neighbors.right));
-
-    // cout << "Process " << this->netParams->getCurrentRank() << ": " << "U=" << this->neighbors.up << " D=" << this->neighbors.down << " L=" << this->neighbors.left << " R=" << this->neighbors.right << endl;
 }
 
 void Topology::Load(vector<int> data)
 {
     this->Barrier();
-    // // Check if data is integer multiple of p
+    // Check if data is integer multiple of p
     if (data.size() % this->netParams->getProcessesNumber())
     {
         // If it's not, print an error and abort

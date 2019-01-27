@@ -41,10 +41,7 @@ int main(int argc, char **argv)
     topology->Load(data);
 
     // Initialize an object that calculates the sum using the MPI_Send/MPI_Recv methods
-    // Neighbors nbrs = topology->GetNeighbors();
-    // cout << "U=" << nbrs.up << " D=" << nbrs.down << " L=" << nbrs.left << " R=" << nbrs.right << endl;
     SumCartesian2DSendRecv *calculation1 = new SumCartesian2DSendRecv(topology);
-    // cout << "." << endl;
 
     // Calculate the sum using MPI_Send/MPI_Recv
     calculation1->Compute();
