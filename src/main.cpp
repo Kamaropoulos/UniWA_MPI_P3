@@ -11,8 +11,12 @@
 
 #include "NetworkParameters.hpp"
 #include "Topology.hpp"
+#include "IO.hpp"
+#include "utils.hpp"
 
 #include "mpi.h"
+
+#include <vector>
 
 #include <iostream>
 
@@ -22,12 +26,27 @@ int main(int argc, char **argv)
 {
     // Initialize MPI and get rank and number of processes
     NetworkParameters *netParams = new NetworkParameters(argc, argv);
-
     Topology *topology = new Topology(netParams);
 
-    //GetNetworkParameters();
-    //GenerateTopology();
-    //ReadData();
+    topology->Init();
+
+    vector<int> data;
+    
+    // Read data
+    ifRoot(netParams->getCurrentRank(), {
+        ReadData(&data, argc, argv);
+        for(int i = 0; i < data.size(); i++)
+        {
+            cout << data[i] << " ";
+        }
+        cout << endl;
+    });
+
+    // Scatter the data across the topology processes
+    Topology->LoadData(data);
+
+    
+
     //ScatterData();
     //accumulateTop();
     //accumulateLeft();
@@ -37,6 +56,7 @@ int main(int argc, char **argv)
     //PrintResult();
 
     delete netParams;
+    delete topology;
 
     MPI_Finalize();
     return 0;
