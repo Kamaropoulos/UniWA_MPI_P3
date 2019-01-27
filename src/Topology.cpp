@@ -27,6 +27,13 @@ struct TopologyDimmensions
     int n;
 };
 
+struct Neighbors {
+    int up;
+    int down;
+    int left;
+    int right
+};
+
 class Topology
 {
   private:
@@ -44,6 +51,7 @@ class Topology
     void Load(vector<int> data);
     void Scatter(vector<int> data);
     void Barrier();
+    int getLocalData();
     ~Topology();
 };
 
@@ -55,6 +63,11 @@ void Topology::Broadcast(int *data, int size)
 void Topology::Barrier()
 {
     MPI_Barrier(MPI_COMM_WORLD);
+}
+
+int Topology::getLocalData()
+{
+    return this->localData;
 }
 
 /**

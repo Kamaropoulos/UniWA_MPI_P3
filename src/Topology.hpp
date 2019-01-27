@@ -21,6 +21,13 @@ struct TopologyDimmensions
     int n;
 };
 
+struct Neighbors {
+    int up;
+    int down;
+    int left;
+    int right
+};
+
 class Topology
 {
   public:
@@ -30,5 +37,6 @@ class Topology
     void Load(vector<int> data);
     void Scatter(vector<int> data);
     void Barrier();
+    int getLocalData();
     ~Topology();
 };
