@@ -116,7 +116,7 @@ void ReadData(std::vector<int> *data, int argc, char **argv)
         std::getline(inputFile, line);
 
         istringstream iss(line);
-        
+
         // A temporary variable to store numbers from the input file.
         int tmpNumber;
 

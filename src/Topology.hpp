@@ -11,6 +11,10 @@
 
 #include "NetworkParameters.hpp"
 
+#include <vector>
+
+using namespace std;
+
 struct TopologyDimmensions
 {
     int m;
@@ -22,6 +26,9 @@ class Topology
   public:
     Topology(NetworkParameters *netParams);
     void Init();
-    int Broadcast(int* data, int size);
+    void Broadcast(int *data, int size);
+    void Load(vector<int> data);
+    void Scatter(vector<int> data);
+    void Barrier();
     ~Topology();
 };

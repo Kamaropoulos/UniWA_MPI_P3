@@ -31,21 +31,14 @@ int main(int argc, char **argv)
     topology->Init();
 
     vector<int> data;
-    
+
     // Read data
     ifRoot(netParams->getCurrentRank(), {
         ReadData(&data, argc, argv);
-        for(int i = 0; i < data.size(); i++)
-        {
-            cout << data[i] << " ";
-        }
-        cout << endl;
     });
 
     // Scatter the data across the topology processes
-    Topology->LoadData(data);
-
-    
+    topology->Load(data);
 
     //ScatterData();
     //accumulateTop();
@@ -55,9 +48,9 @@ int main(int argc, char **argv)
     //accumulateLeft();
     //PrintResult();
 
-    delete netParams;
-    delete topology;
+    // delete netParams;
+    // delete topology;
 
-    MPI_Finalize();
+    // MPI_Finalize();
     return 0;
 }

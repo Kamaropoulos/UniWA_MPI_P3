@@ -15,6 +15,8 @@
 
 #include "mpi.h"
 
+#include <vector>
+
 #include <iostream>
 
 using namespace std;
@@ -28,6 +30,7 @@ struct TopologyDimmensions
 class Topology
 {
   private:
+    int localData;
     TopologyDimmensions dimmensions;
     NetworkParameters *netParams;
     MPI_Comm topologyCommunicator;
@@ -38,12 +41,20 @@ class Topology
     Topology(NetworkParameters *netParams);
     void Init();
     void Broadcast(int *data, int size);
+    void Load(vector<int> data);
+    void Scatter(vector<int> data);
+    void Barrier();
     ~Topology();
 };
 
 void Topology::Broadcast(int *data, int size)
 {
     MPI_Bcast(data, size, MPI_INT, 0, MPI_COMM_WORLD);
+}
+
+void Topology::Barrier()
+{
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 /**
@@ -79,6 +90,26 @@ bool Topology::isValid()
     return (this->netParams->getProcessesNumber() == (this->dimmensions.m * this->dimmensions.n));
 }
 
+void Topology::Scatter(vector<int> data)
+{
+    // Get array from vector
+    int *dataArray;
+
+    ifRoot(this->netParams->getCurrentRank(), {
+        dataArray = &data[0];
+    });
+
+    int tempData;
+
+    MPI_Scatter(dataArray, 1, MPI_INT, &tempData, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    this->Barrier();
+
+    this->localData = tempData;
+
+    cout << "Process " << this->netParams->getCurrentRank() << " got: " << this->localData << endl;
+}
+
 void Topology::Init()
 {
     ifRoot(this->netParams->getCurrentRank(), {
@@ -97,6 +128,45 @@ void Topology::Init()
     int periods[2] = {0, 0};
 
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &(this->topologyCommunicator));
+}
+
+void Topology::Load(vector<int> data)
+{
+    this->Barrier();
+    // // Check if data is integer multiple of p
+    if (data.size() % this->netParams->getProcessesNumber())
+    {
+        // If it's not, print an error and abort
+        std::cout << "\033[1;31m"
+                  << "Error: The number of elements is not an integer multiple of the number of processes!"
+                  << "\033[0m"
+                  << std::endl;
+
+        MPI_Abort(MPI_COMM_WORLD, 1);
+
+        return;
+    }
+
+    // Barrier to ensure input is valid before letting the other processes continue
+    this->Barrier();
+
+    // Broadcast number of data
+    int dataCount;
+
+    ifRoot(this->netParams->getCurrentRank(), {
+        dataCount = data.size();
+    });
+
+    this->Broadcast(&dataCount, 1);
+
+    this->Barrier();
+
+    // Scatter Data
+    //     for (int i = 0; i < data.size(); i++)
+    // {
+    //     cout << data[0] << " ";
+    // }
+    this->Scatter(data);
 }
 
 Topology::~Topology()
