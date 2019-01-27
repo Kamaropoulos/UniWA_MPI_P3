@@ -30,17 +30,18 @@ class Topology
   private:
     TopologyDimmensions dimmensions;
     NetworkParameters *netParams;
+    MPI_Comm topologyCommunicator;
 
     bool isValid();
 
   public:
     Topology(NetworkParameters *netParams);
-    int Init();
-    int Broadcast(int *data, int size);
+    void Init();
+    void Broadcast(int *data, int size);
     ~Topology();
 };
 
-int Topology::Broadcast(int *data, int size)
+void Topology::Broadcast(int *data, int size)
 {
     MPI_Bcast(data, size, MPI_INT, 0, MPI_COMM_WORLD);
 }
@@ -65,18 +66,6 @@ Topology::Topology(NetworkParameters *netParams)
     this->dimmensions.m = tempDimmensions[0];
     this->dimmensions.n = tempDimmensions[1];
     delete[] tempDimmensions;
-
-    ifRoot(this->netParams->getCurrentRank(), {
-        if (!(this->isValid()))
-        {
-            std::cout << "\033[1;31m"
-                      << "Error: Invalid number of processes or topology dimmensions!"
-                      << "\033[0m"
-                      << std::endl;
-
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
-    })
 }
 
 /**
@@ -90,8 +79,24 @@ bool Topology::isValid()
     return (this->netParams->getProcessesNumber() == (this->dimmensions.m * this->dimmensions.n));
 }
 
-int Topology::Init()
+void Topology::Init()
 {
+    ifRoot(this->netParams->getCurrentRank(), {
+        if (!(this->isValid()))
+        {
+            std::cout << "\033[1;31m"
+                      << "Error: Invalid number of processes or topology dimmensions!"
+                      << "\033[0m"
+                      << std::endl;
+
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+    });
+
+    int dims[2] = {this->dimmensions.m, this->dimmensions.n};
+    int periods[2] = {0, 0};
+
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &(this->topologyCommunicator));
 }
 
 Topology::~Topology()

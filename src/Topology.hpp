@@ -21,7 +21,7 @@ class Topology
 {
   public:
     Topology(NetworkParameters *netParams);
-    int Init();
+    void Init();
     int Broadcast(int* data, int size);
     ~Topology();
 };
