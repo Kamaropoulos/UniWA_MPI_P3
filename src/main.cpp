@@ -11,6 +11,7 @@
 
 #include "NetworkParameters.hpp"
 #include "Topology.hpp"
+#include "SumCartesian2DSendRecv.hpp"
 #include "IO.hpp"
 #include "utils.hpp"
 
@@ -30,9 +31,8 @@ int main(int argc, char **argv)
 
     topology->Init();
 
-    vector<int> data;
-
     // Read data
+    vector<int> data;
     ifRoot(netParams->getCurrentRank(), {
         ReadData(&data, argc, argv);
     });
@@ -40,16 +40,21 @@ int main(int argc, char **argv)
     // Scatter the data across the topology processes
     topology->Load(data);
 
-    //ScatterData();
-    //accumulateTop();
-    //accumulateLeft();
-    //PrintResult();
+    // Initialize an object that calculates the sum using the MPI_Send/MPI_Recv methods
+    SumCartesian2DSendRecv calculation1 = new SumCartesian2DSendRecv(topology);
+
+    // Calculate the sum using MPI_Send/MPI_Recv
+    int sum1 = calculation1.Compute();
+
+    // Print first result
+    // PrintResult(sum1, "MPI_Send/MPI_Recv");
+
     //accumulateTop();
     //accumulateLeft();
     //PrintResult();
 
-    // delete netParams;
-    // delete topology;
+    delete netParams;
+    delete topology;
 
     // MPI_Finalize();
     return 0;
